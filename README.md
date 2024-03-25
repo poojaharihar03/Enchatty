@@ -33,6 +33,3 @@ Start the server
 
 # Screenshots
 ![image](https://github.com/anish2105/Enchatty/assets/88924201/dd4f3b6c-39c2-4347-840d-636023a43091)
-
-git config --global user.email "you@example.com"
-git config --global user.name "Your Name"
