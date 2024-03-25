@@ -8,7 +8,7 @@
 Clone the project
 
 ```bash
-  git clone https://github.com/anish2105/Senor.git
+  git clone https://github.com/anish2105/Enchatty.git
 ```
 
 Create virtual environment
