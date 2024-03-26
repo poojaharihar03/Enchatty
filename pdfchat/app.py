@@ -11,8 +11,15 @@ from langchain_community.document_loaders import PDFPlumberLoader
 from langchain import hub
 from streamlit_chat import message as chat_message
 
-os.environ["HUGGINGFACEHUB_API_TOKEN"] = 'your-key'
-HF_token='your-key'
+# Set up Hugging Face API token
+HF_token = st.sidebar.text_input("Enter your Hugging Face API token", type="password")
+if not HF_token:
+    st.error("Please enter your Hugging Face API token.")
+
+if "max_length" not in st.session_state:
+    st.session_state.max_length = 128  # Default value
+if "temp" not in st.session_state:
+    st.session_state.temp = 0.1  # Default value
 
 text_splitter = CharacterTextSplitter(
     separator="\n",
@@ -22,17 +29,20 @@ text_splitter = CharacterTextSplitter(
 
 pdf_file_path = None  # Initialize pdf_file_path
 
-# Function to extract data from PDF
 def extract_data(feed):
     data = []
     with pdfplumber.load(feed) as pdf:
         pages = pdf.pages
         for p in pages:
             data.append(p.extract_tables())
-    return None  # You can build more code here to return a dataframe
+    return None 
 
 # Frontend code
 st.title("Chat with PDF")
+st.write("**Upload your Hugging Face API token and PDF file below**", 
+         unsafe_allow_html=True, 
+         format="markdown", 
+         style={'font-size': '30px'})
 with st.sidebar:
     st.markdown("<h1 style='text-align:center;font-family:Georgia;font-size:26px;'>🧑‍⚖️ Chat with PDF </h1>",
                 unsafe_allow_html=True)
@@ -45,23 +55,29 @@ with st.sidebar:
 
     st.markdown("<h2 style='text-align:center;font-family:Georgia;font-size:20px;'>Advanced Features</h1>",
                 unsafe_allow_html=True)
-    max_length = st.slider("Token Max Length", min_value=128, max_value=1024, value=128, step=128)
-    temp = st.slider("Temperature", min_value=0.1, max_value=1.0, value=0.1, step=0.1)
+    max_length = st.slider("Token Max Length", min_value=128, max_value=1024, value=st.session_state.max_length, step=128)
+    temp = st.slider("Temperature", min_value=0.1, max_value=1.0, value=st.session_state.temp, step=0.1)
+    if st.button("Apply Settings"):
+        st.session_state.max_length = max_length
+        st.session_state.temp = temp
 
 
-# Set up the model and related components using the selected PDF file
 if pdf_file_path:
     loader = PDFPlumberLoader(pdf_file_path)
     pages = loader.load()
     docs = text_splitter.split_documents(pages)
     db = Chroma.from_documents(docs, HuggingFaceInferenceAPIEmbeddings(
-        api_key=HF_token,model_name="sentence-transformers/all-MiniLM-L6-v2"
+        api_key=HF_token, model_name="sentence-transformers/all-MiniLM-L6-v2"
     ))
     prompt = hub.pull("rlm/rag-prompt", api_url="https://api.hub.langchain.com")
 
     def model(user_query, max_length, temp):
         repo_id = 'mistralai/Mixtral-8x7B-Instruct-v0.1'
-        llm = HuggingFaceHub(repo_id=repo_id, model_kwargs={"max_length": 1024, "temperature": 0.1})
+        llm = HuggingFaceHub(
+            repo_id=repo_id,
+            huggingfacehub_api_token=HF_token,
+            model_kwargs={"max_length": 1024, "temperature": 0.1}
+        )
         qa = RetrievalQA.from_chain_type(llm=llm,
                                          chain_type="stuff",
                                          retriever=db.as_retriever(k=2),
@@ -69,7 +85,7 @@ if pdf_file_path:
                                          verbose=True,
                                          chain_type_kwargs={"prompt": prompt})
         response = qa(user_query)["result"]
-        # Extracting only the answer part
+       
         answer_start = response.find("Answer:")
         if answer_start != -1:
             answer = response[answer_start + len("Answer:"):].strip()
@@ -112,11 +128,9 @@ if pdf_file_path:
             {"role": "user", "content": user_prompt}
         )
         chat_message(user_prompt, is_user=True)
-        response = model(user_prompt, max_length, temp)
+        response = model(user_prompt, st.session_state.max_length, st.session_state.temp)
 
         st.session_state.messages.append(
             {"role": "assistant", "content": response}
         )
         chat_message(response)
-else:
-    st.write("Please upload a PDF file to start.")
