@@ -32,4 +32,5 @@ Start the server
 
 
 # Screenshots
-![image](https://github.com/anish2105/Enchatty/assets/88924201/dd4f3b6c-39c2-4347-840d-636023a43091)
+![image](https://github.com/anish2105/Enchatty/assets/88924201/521c7377-78e0-45ce-b5de-bdaa41423dbe)
+
