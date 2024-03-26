@@ -11,8 +11,8 @@ from langchain_community.document_loaders import PDFPlumberLoader
 from langchain import hub
 from streamlit_chat import message as chat_message
 
-os.environ["HUGGINGFACEHUB_API_TOKEN"] = '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'
-HF_token='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'
+os.environ["HUGGINGFACEHUB_API_TOKEN"] = 'your-key'
+HF_token='your-key'
 
 text_splitter = CharacterTextSplitter(
     separator="\n",
