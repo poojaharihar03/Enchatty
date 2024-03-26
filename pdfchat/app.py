@@ -1,4 +1,6 @@
 import os
+import time
+import tempfile
 import pdfplumber
 import streamlit as st
 from langchain.chains import RetrievalQA
@@ -26,7 +28,6 @@ text_splitter = CharacterTextSplitter(
     chunk_size=1000,
     chunk_overlap=200
 )
-
 pdf_file_path = None  # Initialize pdf_file_path
 
 def extract_data(feed):
@@ -36,6 +37,15 @@ def extract_data(feed):
         for p in pages:
             data.append(p.extract_tables())
     return None 
+
+# Function to record time
+time_start = 0
+def record_timing():
+    global time_start
+    if time_start != 0:
+        duration = time.time() - time_start
+        print(f"Time taken for query-response pair: {duration:.2f} seconds")
+    time_start = time.time()
 
 # Frontend code
 st.title("Chat with PDF")
@@ -50,8 +60,15 @@ with st.sidebar:
                 unsafe_allow_html=True)
     st.markdown("Users can now add their own choice of PDFs and chat with our application")
     uploaded_file = st.file_uploader('Choose your .pdf file', type="pdf")
+
     if uploaded_file is not None:
-        pdf_file_path = uploaded_file.name  # Set the pdf_file_path when file is uploaded
+    # Save the uploaded file to a temporary location
+        with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
+            tmp_file.write(uploaded_file.getvalue())
+            pdf_file_path = tmp_file.name 
+            
+    # if uploaded_file is not None:
+    #     pdf_file_path = uploaded_file.name  
 
     st.markdown("<h2 style='text-align:center;font-family:Georgia;font-size:20px;'>Advanced Features</h1>",
                 unsafe_allow_html=True)
@@ -72,6 +89,7 @@ if pdf_file_path:
     prompt = hub.pull("rlm/rag-prompt", api_url="https://api.hub.langchain.com")
 
     def model(user_query, max_length, temp):
+        record_timing()  # Record time before generating response
         repo_id = 'mistralai/Mixtral-8x7B-Instruct-v0.1'
         llm = HuggingFaceHub(
             repo_id=repo_id,
@@ -108,6 +126,7 @@ if pdf_file_path:
         st.session_state.widget = ''
 
     def submit():
+        record_timing()  # Record time before submitting message
         st.session_state.something = st.session_state.widget
         st.session_state.widget = ''
 
@@ -129,8 +148,10 @@ if pdf_file_path:
         )
         chat_message(user_prompt, is_user=True)
         response = model(user_prompt, st.session_state.max_length, st.session_state.temp)
+        record_timing()  # Record time after generating response
 
         st.session_state.messages.append(
             {"role": "assistant", "content": response}
         )
         chat_message(response)
+
