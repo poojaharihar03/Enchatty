@@ -13,11 +13,6 @@ from langchain_community.document_loaders import PDFPlumberLoader
 from langchain import hub
 from streamlit_chat import message as chat_message
 
-# Set up Hugging Face API token
-HF_token = st.sidebar.text_input("Enter your Hugging Face API token", type="password")
-if not HF_token:
-    st.error("Please enter your Hugging Face API token.")
-
 if "max_length" not in st.session_state:
     st.session_state.max_length = 128  # Default value
 if "temp" not in st.session_state:
@@ -53,22 +48,41 @@ st.write("**Upload your Hugging Face API token and PDF file below**",
          unsafe_allow_html=True, 
          format="markdown", 
          style={'font-size': '30px'})
+
 with st.sidebar:
     st.markdown("<h1 style='text-align:center;font-family:Georgia;font-size:26px;'>🧑‍⚖️ Chat with PDF </h1>",
                 unsafe_allow_html=True)
     st.markdown("<h2 style='text-align:center;font-family:Georgia;font-size:20px;'>Features</h2>",
                 unsafe_allow_html=True)
     st.markdown("Users can now add their own choice of PDFs and chat with our application")
-    uploaded_file = st.file_uploader('Choose your .pdf file', type="pdf")
+    
+    # Add a div to contain the input field and label
+    st.markdown("<div id='hf_token_input'></div>", unsafe_allow_html=True)
 
+    # Add CSS to ensure the input field stays in the default place
+    st.markdown("""
+        <style>
+            #hf_token_input {
+                position: fixed;
+                top: 10px; 
+            }
+        </style>
+    """, unsafe_allow_html=True)
+    
+    # Add the input field for the Hugging Face API token
+    HF_token = st.text_input("Enter your Hugging Face API token", type="password")
+    
+    # Display error message if the token is not entered
+    if not HF_token:
+        st.error("Please enter your Hugging Face API token.")
+    
+
+    uploaded_file = st.file_uploader('Choose your .pdf file', type="pdf")
     if uploaded_file is not None:
     # Save the uploaded file to a temporary location
         with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
             tmp_file.write(uploaded_file.getvalue())
             pdf_file_path = tmp_file.name 
-            
-    # if uploaded_file is not None:
-    #     pdf_file_path = uploaded_file.name  
 
     st.markdown("<h2 style='text-align:center;font-family:Georgia;font-size:20px;'>Advanced Features</h1>",
                 unsafe_allow_html=True)
@@ -154,4 +168,3 @@ if pdf_file_path:
             {"role": "assistant", "content": response}
         )
         chat_message(response)
-
