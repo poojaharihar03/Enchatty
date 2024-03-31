@@ -5,13 +5,14 @@ import pdfplumber
 import streamlit as st
 from langchain.chains import RetrievalQA
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_community.vectorstores import Chroma,FAISS
+from langchain_community.vectorstores import Chroma, Faiss
 from langchain_community.llms import HuggingFaceHub
 from langchain_community.embeddings import HuggingFaceInferenceAPIEmbeddings
 from langchain_community.llms.huggingface_pipeline import HuggingFacePipeline
 from langchain_community.document_loaders import PDFPlumberLoader, WebBaseLoader
 from langchain import hub
 from streamlit_chat import message as chat_message
+from langchain_community.document_loaders import YoutubeLoader
 import re
 
 # Function to record time
@@ -22,6 +23,10 @@ def record_timing():
         duration = time.time() - time_start
         print(f"Time taken for query-response pair: {duration:.2f} seconds")
     time_start = time.time()
+
+def is_youtube_link(url):
+  youtube_pattern = r"(https?://)?(www\.)?(youtube\.com/watch\?v=|youtu\.be/)([\w-]+)"
+  return re.match(youtube_pattern, url) is not None
 
 # List of available LLM models
 llm_models = {
@@ -49,7 +54,7 @@ with st.sidebar:
     if HF_token:
         # Replace the token input field with the success message
         token_placeholder.empty()
-        st.success('API key provided!', icon='✅')
+        st.success('API key already provided!', icon='✅')
     else:
         st.warning('Please enter your Hugging Face API token!', icon='⚠️')
 
@@ -67,7 +72,7 @@ with st.sidebar:
             st.warning("Access to this model requires authorization from Hugging Face.")
         
         file_or_url_placeholder = st.empty()
-        file_or_url = st.radio("Choose Input Type", ("PDF File", "Website"))
+        file_or_url = st.radio("Choose Input Type", ("PDF File", "Website", "Youtube Link"))
 
         if file_or_url == "PDF File":
             uploaded_file = st.file_uploader('Upload your .pdf file', type="pdf")
@@ -79,7 +84,6 @@ with st.sidebar:
                 with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
                     tmp_file.write(uploaded_file.getvalue())
                     content = PDFPlumberLoader(tmp_file.name).load()
-                    
         elif file_or_url == "Website":
             url_placeholder = st.empty()
             url = st.text_input("Enter the URL")
@@ -89,6 +93,19 @@ with st.sidebar:
                 st.success('URL entered successfully!', icon='✅')
                 # Process the URL
                 content = WebBaseLoader(url).load()
+        elif file_or_url == "Youtube Link":
+            youtube_url_placeholder = st.empty()
+            url = st.text_input("Enter the YouTube URL")
+            if url.strip():
+                if is_youtube_link(url):
+                    # Replace the YouTube URL input field with the success message
+                    youtube_url_placeholder.empty()
+                    st.success('YouTube URL entered successfully!', icon='✅')
+                    # Process the YouTube URL
+                    loader = YoutubeLoader.from_youtube_url(url, add_video_info=True)
+                    content = loader.load()
+                else:
+                    st.error("Invalid YouTube URL provided.")
 
         st.markdown("<h2 style='text-align:center;font-family:Georgia;font-size:20px;'>Advanced Features</h1>",
                     unsafe_allow_html=True)
@@ -103,7 +120,7 @@ if 'content' in locals():
         api_key=HF_token,
         model_name="sentence-transformers/all-MiniLM-L6-v2"
     )
-    vectorstore = FAISS.from_documents(chunking, embeddings)
+    vectorstore = Chroma.from_documents(chunking, embeddings)
     prompt = hub.pull("rlm/rag-prompt", api_url="https://api.hub.langchain.com")
 
     # Get the selected LLM model ID
