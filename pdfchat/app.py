@@ -12,7 +12,6 @@ from langchain_community.llms.huggingface_pipeline import HuggingFacePipeline
 from langchain_community.document_loaders import PDFPlumberLoader, WebBaseLoader
 from langchain import hub
 from streamlit_chat import message as chat_message
-from langchain_community.document_loaders import YoutubeLoader
 import re
 
 # Function to record time
@@ -23,10 +22,6 @@ def record_timing():
         duration = time.time() - time_start
         print(f"Time taken for query-response pair: {duration:.2f} seconds")
     time_start = time.time()
-
-def is_youtube_link(url):
-  youtube_pattern = r"(https?://)?(www\.)?(youtube\.com/watch\?v=|youtu\.be/)([\w-]+)"
-  return re.match(youtube_pattern, url) is not None
 
 # List of available LLM models
 llm_models = {
@@ -72,7 +67,7 @@ with st.sidebar:
             st.warning("Access to this model requires authorization from Hugging Face.")
         
         file_or_url_placeholder = st.empty()
-        file_or_url = st.radio("Choose Input Type", ("PDF File", "Website", "Youtube Link"))
+        file_or_url = st.radio("Choose Input Type", ("PDF File", "Website"))
 
         if file_or_url == "PDF File":
             uploaded_file = st.file_uploader('Upload your .pdf file', type="pdf")
@@ -84,6 +79,7 @@ with st.sidebar:
                 with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
                     tmp_file.write(uploaded_file.getvalue())
                     content = PDFPlumberLoader(tmp_file.name).load()
+                    
         elif file_or_url == "Website":
             url_placeholder = st.empty()
             url = st.text_input("Enter the URL")
@@ -93,19 +89,6 @@ with st.sidebar:
                 st.success('URL entered successfully!', icon='✅')
                 # Process the URL
                 content = WebBaseLoader(url).load()
-        elif file_or_url == "Youtube Link":
-            youtube_url_placeholder = st.empty()
-            url = st.text_input("Enter the URL")
-            if url.strip():
-                if is_youtube_link(url):
-                    # Replace the YouTube URL input field with the success message
-                    youtube_url_placeholder.empty()
-                    st.success('URL entered successfully!', icon='✅')
-                    # Process the YouTube URL
-                    loader = YoutubeLoader.from_youtube_url(url, add_video_info=True)
-                    content = loader.load()
-                else:
-                    st.error("Invalid YouTube URL provided.")
 
         st.markdown("<h2 style='text-align:center;font-family:Georgia;font-size:20px;'>Advanced Features</h1>",
                     unsafe_allow_html=True)
