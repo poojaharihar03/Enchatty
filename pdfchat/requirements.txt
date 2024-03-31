@@ -14,3 +14,4 @@ requests
 torch
 pdfplumber
 streamlit-chat
+bs4
