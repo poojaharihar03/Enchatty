@@ -5,7 +5,7 @@ import pdfplumber
 import streamlit as st
 from langchain.chains import RetrievalQA
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_community.vectorstores import Chroma
+from langchain_community.vectorstores import Chroma,FAISS
 from langchain_community.llms import HuggingFaceHub
 from langchain_community.embeddings import HuggingFaceInferenceAPIEmbeddings
 from langchain_community.llms.huggingface_pipeline import HuggingFacePipeline
@@ -54,7 +54,7 @@ with st.sidebar:
     if HF_token:
         # Replace the token input field with the success message
         token_placeholder.empty()
-        st.success('API key already provided!', icon='✅')
+        st.success('API key provided!', icon='✅')
     else:
         st.warning('Please enter your Hugging Face API token!', icon='⚠️')
 
@@ -95,12 +95,12 @@ with st.sidebar:
                 content = WebBaseLoader(url).load()
         elif file_or_url == "Youtube Link":
             youtube_url_placeholder = st.empty()
-            url = st.text_input("Enter the YouTube URL")
+            url = st.text_input("Enter the URL")
             if url.strip():
                 if is_youtube_link(url):
                     # Replace the YouTube URL input field with the success message
                     youtube_url_placeholder.empty()
-                    st.success('YouTube URL entered successfully!', icon='✅')
+                    st.success('URL entered successfully!', icon='✅')
                     # Process the YouTube URL
                     loader = YoutubeLoader.from_youtube_url(url, add_video_info=True)
                     content = loader.load()
@@ -120,7 +120,7 @@ if 'content' in locals():
         api_key=HF_token,
         model_name="sentence-transformers/all-MiniLM-L6-v2"
     )
-    vectorstore = Chroma.from_documents(chunking, embeddings)
+    vectorstore = FAISS.from_documents(chunking, embeddings)
     prompt = hub.pull("rlm/rag-prompt", api_url="https://api.hub.langchain.com")
 
     # Get the selected LLM model ID
