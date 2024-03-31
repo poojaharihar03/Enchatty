@@ -6,7 +6,6 @@ transformers
 torch
 accelerate
 pdfminer.six
-#bs4
 sentence_transformers
 chromadb
 sentence-transformers
