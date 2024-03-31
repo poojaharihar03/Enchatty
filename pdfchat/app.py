@@ -39,34 +39,25 @@ llm_models = {
 }
 
 # Frontend code
-st.title("Chat with PDF or URL")
+st.set_page_config(page_title="🦙💬 Enchantty Chatbot")
 st.write("*Upload your Hugging Face API token and either upload a PDF file or enter a URL below*", 
          unsafe_allow_html=True, 
          format="markdown", 
          style={'font-size': '20px'})
 
 with st.sidebar:
-    
-    # Add a div to contain the input field and label
-    st.markdown("<div id='hf_token_input'></div>", unsafe_allow_html=True)
+    st.markdown("**Hugging Face API Token**")
+    token_placeholder = st.empty()
+    HF_token = token_placeholder.text_input("Enter your Hugging Face API token", type="password")
 
-    # Add CSS to ensure the input field stays in the default place
-    st.markdown("""
-        <style>
-            #hf_token_input {
-                top: 5rem;
-                position: fixed; 
-            }
-        </style>
-    """, unsafe_allow_html=True)
-    
-    # Add the input field for the Hugging Face API token
-    HF_token = st.text_input("Enter your Hugging Face API token", type="password")
-    
-    # Display error message if the token is not entered
-    if not HF_token:
-        st.error("Please enter your Hugging Face API token.")
-    
+    # Check if HF_token is provided
+    if HF_token:
+        # Replace the token input field with the success message
+        token_placeholder.empty()
+        st.success('API key already provided!', icon='✅')
+    else:
+        st.warning('Please enter your Hugging Face API token!', icon='⚠️')
+
     # Changing from here 
     if HF_token:
         
@@ -80,39 +71,47 @@ with st.sidebar:
         if selected_model == "Llama-2-7B (Gated Access)" or selected_model == "Gemma-7B (Gated Access)" or selected_model == "Gemma-7B-it (Gated Access)" :
             st.warning("Access to this model requires authorization from Hugging Face.")
         
-        # Allow user to choose between uploading PDF or entering URL
+        file_or_url_placeholder = st.empty()
         file_or_url = st.radio("Choose Input Type", ("PDF File", "Website", "Youtube Link"))
 
         if file_or_url == "PDF File":
             uploaded_file = st.file_uploader('Upload your .pdf file', type="pdf")
             if uploaded_file is not None:
-                # Save the uploaded file to a temporary location
+                # Replace the PDF upload input field with the success message
+                file_or_url_placeholder.empty()
+                st.success('PDF file uploaded successfully!', icon='✅')
+                # Save the uploaded file to a temporary location and process it
                 with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
                     tmp_file.write(uploaded_file.getvalue())
                     content = PDFPlumberLoader(tmp_file.name).load()
+        elif file_or_url == "Website":
+            url_placeholder = st.empty()
+            url = st.text_input("Enter the URL")
+            if url.strip():
+                # Replace the URL input field with the success message
+                url_placeholder.empty()
+                st.success('URL entered successfully!', icon='✅')
+                # Process the URL
+                content = WebBaseLoader(url).load()
         elif file_or_url == "Youtube Link":
+            youtube_url_placeholder = st.empty()
             url = st.text_input("Enter the YouTube URL")
-            if url.strip():  # Check if the URL field is not empty
+            if url.strip():
                 if is_youtube_link(url):
-                    loader = YoutubeLoader.from_youtube_url(
-                        url, add_video_info=True
-                    )
+                    # Replace the YouTube URL input field with the success message
+                    youtube_url_placeholder.empty()
+                    st.success('YouTube URL entered successfully!', icon='✅')
+                    # Process the YouTube URL
+                    loader = YoutubeLoader.from_youtube_url(url, add_video_info=True)
                     content = loader.load()
                 else:
                     st.error("Invalid YouTube URL provided.")
-        else:  # Input type is URL
-            url = st.text_input("Enter the URL")
-            if url.strip():  # Check if the URL field is not empty
-                content = WebBaseLoader(url).load()
-            else:
-                st.error("Please enter a valid URL.")
 
         st.markdown("<h2 style='text-align:center;font-family:Georgia;font-size:20px;'>Advanced Features</h1>",
                     unsafe_allow_html=True)
         max_length = st.slider("Token Max Length", min_value=256, max_value=1024, value=256, step=128)
         temp = st.slider("Temperature", min_value=0.1, max_value=1.0, value=0.1, step=0.1)
-        if st.button("Apply Settings"):
-            pass  # You can add your logic here if needed
+
 
 if 'content' in locals():
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=512, chunk_overlap=50)
@@ -169,33 +168,46 @@ if 'content' in locals():
 
     if "widget" not in st.session_state:
         st.session_state.widget = ''
+    if "messages" not in st.session_state.keys():
+        st.session_state.messages = [{"role": "assistant", "content": "How may I assist you today?"}]
+
+    # Display or clear chat messages
+    for message in st.session_state.messages:
+        with st.chat_message(message["role"]):
+            st.write(message["content"])
+
+    def clear_chat_history():
+        st.session_state.messages = [{"role": "assistant", "content": "How may I assist you today?"}]
+    st.sidebar.button('Clear Chat History', on_click=clear_chat_history)
 
     def submit():
         record_timing()  # Record time before submitting message
-        st.session_state.something = st.session_state.widget
         st.session_state.widget = ''
 
+    # def submit():
+    #     record_timing()  # Record time before submitting message
+    #     st.session_state.something = st.session_state.widget
+    #     st.session_state.widget = ''
+
     if "messages" not in st.session_state:
-        st.session_state.messages = [
-            {"role": "assistant", "content": "How may I help you today?"}
-        ]
-
-    if "current_response" not in st.session_state:
-        st.session_state.current_response = ""
-
-    for message in st.session_state.messages:
-        chat_message(message["content"], is_user=message["role"] == "user", key=message["content"])  # Assign unique key
+        st.session_state.messages = [{"role": "assistant", "content": "How may I help you today?"}]
 
     if user_prompt := st.text_input("Your message here", on_change=submit, key="text_input"):  # Assign unique key
+        st.session_state.messages.append({"role": "user", "content": user_prompt})
+        submit()
+        with st.chat_message("user"):
+            st.write(user_prompt)
 
-        st.session_state.messages.append(
-            {"role": "user", "content": user_prompt}
-        )
-        chat_message(user_prompt, is_user=True, key=user_prompt)  # Assign unique key
-        response = model(user_prompt, max_length, temp)
-        record_timing()  # Record time after generating response
-
-        st.session_state.messages.append(
-            {"role": "assistant", "content": response}
-        )
-        chat_message(response, key=response)  # Assign unique key
+    if st.session_state.messages[-1]["role"] != "assistant":
+        with st.chat_message("assistant"):
+            with st.spinner("Thinking..."):
+                response = model(user_prompt, max_length, temp)
+                placeholder = st.empty()
+                full_response = ''
+                for item in response:
+                    full_response += item
+                    placeholder.markdown(full_response)
+                placeholder.markdown(full_response)
+        message = {"role": "assistant", "content": full_response}
+        st.session_state.messages.append(message)
+        
