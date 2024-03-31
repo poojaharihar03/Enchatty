@@ -1,4 +1,6 @@
 langchain
+sqllite
+faiss_cpu
 langchainhub
 IPython
 llama-index-llms-langchain
