@@ -182,19 +182,14 @@ if 'content' in locals():
 
     def submit():
         record_timing()  # Record time before submitting message
+        st.session_state.something = st.session_state.widget
         st.session_state.widget = ''
-
-    # def submit():
-    #     record_timing()  # Record time before submitting message
-    #     st.session_state.something = st.session_state.widget
-    #     st.session_state.widget = ''
 
     if "messages" not in st.session_state:
         st.session_state.messages = [{"role": "assistant", "content": "How may I help you today?"}]
 
     if user_prompt := st.text_input("Your message here", on_change=submit, key="text_input"):  # Assign unique key
         st.session_state.messages.append({"role": "user", "content": user_prompt})
-        submit()
         with st.chat_message("user"):
             st.write(user_prompt)
 
@@ -210,4 +205,3 @@ if 'content' in locals():
                 placeholder.markdown(full_response)
         message = {"role": "assistant", "content": full_response}
         st.session_state.messages.append(message)
-        
