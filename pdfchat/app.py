@@ -5,7 +5,7 @@ import pdfplumber
 import streamlit as st
 from langchain.chains import RetrievalQA
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_community.vectorstores import Chroma, Faiss
+from langchain_community.vectorstores import Chroma, FAISS
 from langchain_community.llms import HuggingFaceHub
 from langchain_community.embeddings import HuggingFaceInferenceAPIEmbeddings
 from langchain_community.llms.huggingface_pipeline import HuggingFacePipeline
