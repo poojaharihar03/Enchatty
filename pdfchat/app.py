@@ -28,7 +28,6 @@ llm_models = {
     "Mistral-7B-Instruct-v0.2": "mistralai/Mistral-7B-Instruct-v0.2",
     "Mixtral-8x7B-Instruct-v0.1": "mistralai/Mixtral-8x7B-Instruct-v0.1",
     "Gemma-7B (Gated Access)": "google/gemma-7b",
-    "Llama-2-7B (Gated Access)": "meta-llama/Llama-2-7b-hf",
     "Gemma-7B-it (Gated Access)":"google/gemma-7b-it",
     "Zephyr":"HuggingFaceH4/zephyr-7b-beta"
 }
