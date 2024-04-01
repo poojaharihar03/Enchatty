@@ -29,7 +29,8 @@ llm_models = {
     "Mixtral-8x7B-Instruct-v0.1": "mistralai/Mixtral-8x7B-Instruct-v0.1",
     "Gemma-7B (Gated Access)": "google/gemma-7b",
     "Gemma-7B-it (Gated Access)":"google/gemma-7b-it",
-    "Zephyr":"HuggingFaceH4/zephyr-7b-beta"
+    "Zephyr":"HuggingFaceH4/zephyr-7b-beta",
+    "TinyLlama":"TinyLlama/TinyLlama-1.1B-Chat-v1.0"
 }
 
 # Frontend code
