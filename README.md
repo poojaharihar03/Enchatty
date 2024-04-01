@@ -52,5 +52,6 @@ Run Your Image
 **Note:** You need to have docker desktop installed in your PC to run the above commands. 
 
 # Screenshots
-![image](https://github.com/anish2105/Enchatty/assets/88924201/521c7377-78e0-45ce-b5de-bdaa41423dbe)
+![image](https://github.com/anish2105/Enchatty/assets/88924201/11cdd251-d7ec-4673-9fce-734718a7b18c)
+
 
