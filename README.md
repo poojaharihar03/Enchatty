@@ -56,3 +56,13 @@ Run Your Image
 
 
 
+![image](https://github.com/anish2105/Enchatty/assets/88924201/0d0b2f55-a9f7-4d00-b402-dc81b605a689)
+
+
+
+![image](https://github.com/anish2105/Enchatty/assets/88924201/482601ac-a175-47f1-99af-300719f9ac98)
+
+
+
+
+
