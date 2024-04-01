@@ -30,7 +30,7 @@ llm_models = {
     "Gemma-7B (Gated Access)": "google/gemma-7b",
     "Gemma-7B-it (Gated Access)":"google/gemma-7b-it",
     "Zephyr":"HuggingFaceH4/zephyr-7b-beta",
-    "TinyLlama":"TinyLlama/TinyLlama-1.1B-Chat-v1.0"
+    "Google-2b":"google/gemma-2b-it"
 }
 
 # Frontend code
