@@ -35,7 +35,7 @@ llm_models = {
 
 # Frontend code
 st.set_page_config(page_title="🦙💬 Enchantty Chatbot")
-st.title("Enchantty Chatbot")
+st.title("Enchantty")
 st.write("*Upload your Hugging Face API token and chat with your PDF's and Websites*", 
          unsafe_allow_html=True, 
          format="markdown", 
